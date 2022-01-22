@@ -1,7 +1,9 @@
 import axios from "axios";
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
+import { useEffect, Dispatch, SetStateAction, useRef } from "react";
 import { GeoType } from "../types";
 import "../styles/MapStyle.css";
+import { priceToKorean } from "../utils";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface IProps {
   data: GeoType | null;
@@ -10,50 +12,92 @@ interface IProps {
 }
 
 const Map = ({ data, setData, setIsLoading }: IProps) => {
-  const [curPin, setCurPin] = useState<Element | null>(null);
+  let navigate = useNavigate();
+  const { pathname } = useLocation();
+  const path = pathname.split("/")[2];
+  const mapDivRef = useRef(null);
+  const mapRef = useRef<naver.maps.Map>();
+  const markerRef = useRef<naver.maps.Marker>();
 
   useEffect(() => {
-    let mapDiv = document.getElementById("map");
+    console.log("변화");
+    if (path) {
+      setIsLoading(true);
+      axios
+        .get(`https://vos.land/api/asset/all-processed-data?asset_pnu=${path}`)
+        .then((res) => {
+          setData(res.data);
+          let map = mapRef.current;
+          let position = res.data.centerPoint.streetViewTarget;
+          let marker = markerRef.current;
+          console.log("marker", marker);
+          if (!marker) {
+            let markerOptions = {
+              position,
+              map,
+              title: "pin",
+              icon: {
+                url: "/pin.svg",
+                anchor: new naver.maps.Point(110, 200),
+              },
+            };
+            marker = new naver.maps.Marker(markerOptions);
+            markerRef.current = marker;
+            map?.panTo(position, { duration: 700 });
+          } else {
+            marker.setPosition(position);
+            map?.panTo(position, { duration: 700 });
+          }
+          let pin = document.querySelector("div[title='pin']");
+          if (pin) {
+            pin.className = "spin";
+          }
+          let beforeContainer = document.querySelector("#container");
+          if (beforeContainer) {
+            pin?.removeChild(beforeContainer);
+          }
+          return res;
+        })
+        .then((res) => {
+          setTimeout(() => {
+            setIsLoading(false);
+            let pin = document.querySelector("div[title='pin']");
+            pin?.classList.remove("spin");
+            let container = document.createElement("div");
+            container.id = "container";
+
+            let address = document.createElement("div");
+            address.className = "address";
+            address.textContent =
+              res.data.assetOverviewMulti.assetName.length < 8
+                ? res.data.assetOverviewMulti.assetName
+                : ` ${res.data.assetOverviewMulti.assetAddressObject.emd} ${res.data.assetOverviewMulti.assetAddressObject.ji}`;
+            let price = document.createElement("div");
+            price.className = "price";
+            price.textContent = priceToKorean(
+              res.data.assetOverviewMulti.assetValue.estimatePrice
+            );
+
+            container.append(address);
+            if (res.data.assetOverviewMulti.assetValue.estimatePrice !== null) {
+              container.append(price);
+            }
+            pin?.append(container);
+          }, 500);
+        });
+    }
+  }, [path]);
+
+  useEffect(() => {
+    let mapDiv = mapDivRef.current;
     let center = new naver.maps.LatLng(37.50619726782106, 127.06353904199999);
-    let map = new naver.maps.Map(mapDiv as HTMLElement, {
+    let map = new naver.maps.Map(mapDiv as unknown as HTMLElement, {
       center,
       zoom: 17,
     });
-
-    let marker: naver.maps.Marker | null = null;
+    mapRef.current = map;
 
     naver.maps.Event.addListener(map, "click", (e) => {
-      setIsLoading(true);
-      if (!marker) {
-        let markerOptions = {
-          position: e.latlng,
-          map,
-          title: "pin",
-          icon: {
-            url: "/pin.svg",
-            anchor: new naver.maps.Point(110, 200),
-          },
-        };
-        marker = new naver.maps.Marker(markerOptions);
-        map.panTo(e.latlng, { duration: 700 });
-      } else {
-        marker.setPosition(e.latlng);
-        map.panTo(e.latlng, { duration: 700 });
-      }
-
-      let pin = document.querySelector("div[title='pin']");
-      if (pin) {
-        pin.className = "spin";
-      }
-
-      let beforeContainer = document.querySelector("#container");
-      if (beforeContainer) {
-        pin?.removeChild(beforeContainer);
-      }
-
-      let container = document.createElement("div");
-      container.id = "container";
-
       naver.maps.Service.reverseGeocode(
         {
           coords: e.latlng,
@@ -82,32 +126,7 @@ const Map = ({ data, setData, setIsLoading }: IProps) => {
           let pnu =
             code.id + land.type + make4(land.number1) + make4(land.number2);
 
-          function sleep(ms: number) {
-            const wakeUpTime = Date.now() + ms;
-            while (Date.now() < wakeUpTime) {}
-          }
-          axios
-            .get(
-              `https://vos.land/api/asset/all-processed-data?asset_pnu=${pnu}`
-            )
-            .then((res) => {
-              setTimeout(() => {
-                setData(res.data);
-                setIsLoading(false);
-                pin?.classList.remove("spin");
-                let address = document.createElement("div");
-                address.className = "address";
-                address.textContent = res.data.assetOverviewMulti.assetAddress;
-                let price = document.createElement("div");
-                price.className = "price";
-                price.textContent =
-                  res.data.assetOverviewMulti.assetValue.estimatePrice;
-                container.append(address);
-                container.append(price);
-                pin?.append(container);
-              }, 500);
-            })
-            .catch((e) => console.log(e));
+          navigate(`/property/${pnu}`);
         }
       );
     });
@@ -115,7 +134,12 @@ const Map = ({ data, setData, setIsLoading }: IProps) => {
 
   return (
     <div className="w-full">
-      <div className="outline-none" id="map" style={{ height: "100vh" }}></div>
+      <div
+        className="outline-none"
+        id="map"
+        ref={mapDivRef}
+        style={{ height: "100vh" }}
+      ></div>
     </div>
   );
 };

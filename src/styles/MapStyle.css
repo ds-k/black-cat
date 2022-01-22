@@ -19,3 +19,17 @@
     transform: rotate(360deg);
   }
 }
+
+.address {
+  color: #ffffff;
+  font-size: 1.125rem;
+  font-weight: bold;
+}
+
+.price {
+  color: #fff;
+  background-color: #ff6565;
+  margin-top: 10px;
+  padding: 0 10px;
+  border-radius: 20px;
+}
