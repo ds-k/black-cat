@@ -1,17 +1,13 @@
 import axios from "axios";
 import { useState, useEffect, Dispatch, SetStateAction } from "react";
-import styled from "styled-components";
-import customAxios from "../customAxios";
 import { GeoType } from "../types";
+import "../styles/MapStyle.css";
 
 interface IProps {
   data: GeoType | null;
   setData: Dispatch<SetStateAction<GeoType | null>>;
   setIsLoading: Dispatch<SetStateAction<boolean>>;
 }
-const Container = styled.div`
-  width: 100%;
-`;
 
 const Map = ({ data, setData, setIsLoading }: IProps) => {
   const [curPin, setCurPin] = useState<Element | null>(null);
@@ -27,7 +23,6 @@ const Map = ({ data, setData, setIsLoading }: IProps) => {
     let marker: naver.maps.Marker | null = null;
 
     naver.maps.Event.addListener(map, "click", (e) => {
-      console.log(e);
       setIsLoading(true);
       if (!marker) {
         let markerOptions = {
@@ -36,33 +31,28 @@ const Map = ({ data, setData, setIsLoading }: IProps) => {
           title: "pin",
           icon: {
             url: "/pin.svg",
-            anchor: new naver.maps.Point(100, 200),
+            anchor: new naver.maps.Point(110, 200),
           },
         };
         marker = new naver.maps.Marker(markerOptions);
+        map.panTo(e.latlng, { duration: 700 });
       } else {
         marker.setPosition(e.latlng);
+        map.panTo(e.latlng, { duration: 700 });
       }
 
       let pin = document.querySelector("div[title='pin']");
-
-      let container = document.querySelector(".container");
-      if (container) {
-        pin?.removeChild(container);
+      if (pin) {
+        pin.className = "spin";
       }
 
-      // axios
-      //   .get(
-      //     `https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?coords=${e.latlng.x},${e.latlng.y}`,
-      //     {
-      //       headers: {
-      //         "X-NCP-APIGW-API-KEY-ID": "eee6xl79u6",
-      //         "X-NCP-APIGW-API-KEY": "qlzVcNtVdb3qFWBEr9s1aBXBUPIjMHu47gaTeJAf",
-      //       },
-      //     }
-      //   )
-      //   .then((res) => console.log(res))
-      //   .catch((e) => console.log(e));
+      let beforeContainer = document.querySelector("#container");
+      if (beforeContainer) {
+        pin?.removeChild(beforeContainer);
+      }
+
+      let container = document.createElement("div");
+      container.id = "container";
 
       naver.maps.Service.reverseGeocode(
         {
@@ -72,13 +62,13 @@ const Map = ({ data, setData, setIsLoading }: IProps) => {
             naver.maps.Service.OrderType.ROAD_ADDR,
           ].join(","),
         },
-        function (status, response) {
+        (status, response) => {
           if (status !== naver.maps.Service.Status.OK) {
             return alert("Something wrong!");
           }
 
-          var result = response.v2; // 검색 결과의 컨테이너
-          const jibun = result.results[0]; // 검색 결과의 배열
+          var result = response.v2;
+          const jibun = result.results[0];
           const { code, land } = jibun;
 
           const make4 = (s: string): string => {
@@ -92,44 +82,41 @@ const Map = ({ data, setData, setIsLoading }: IProps) => {
           let pnu =
             code.id + land.type + make4(land.number1) + make4(land.number2);
 
+          function sleep(ms: number) {
+            const wakeUpTime = Date.now() + ms;
+            while (Date.now() < wakeUpTime) {}
+          }
           axios
             .get(
               `https://vos.land/api/asset/all-processed-data?asset_pnu=${pnu}`
             )
             .then((res) => {
-              console.log("@@@@@@@@@@@", res.data);
-              setData(res.data);
-              setIsLoading(false);
-              let container = document.createElement("div");
-              container.className = "container";
-              container.style.width = "inherit";
-              container.style.height = "inherit";
-              container.style.display = "flex";
-              container.style.justifyContent = "center";
-              container.style.flexDirection = "column";
-              container.style.alignItems = "center";
-              container.style.zIndex = "2";
-              container.style.position = "fixed";
-              let address = document.createElement("div");
-              address.className = "address";
-              address.textContent = res.data.assetOverviewMulti.assetAddress;
-              let price = document.createElement("div");
-              price.className = "price";
-              price.textContent =
-                res.data.assetOverviewMulti.assetValue.estimatePrice;
-              container.append(address);
-              container.append(price);
-              pin?.append(container);
-            });
+              setTimeout(() => {
+                setData(res.data);
+                setIsLoading(false);
+                pin?.classList.remove("spin");
+                let address = document.createElement("div");
+                address.className = "address";
+                address.textContent = res.data.assetOverviewMulti.assetAddress;
+                let price = document.createElement("div");
+                price.className = "price";
+                price.textContent =
+                  res.data.assetOverviewMulti.assetValue.estimatePrice;
+                container.append(address);
+                container.append(price);
+                pin?.append(container);
+              }, 500);
+            })
+            .catch((e) => console.log(e));
         }
       );
     });
   }, []);
 
   return (
-    <Container>
-      <div id="map" style={{ height: "100vh" }}></div>
-    </Container>
+    <div className="w-full">
+      <div className="outline-none" id="map" style={{ height: "100vh" }}></div>
+    </div>
   );
 };
 

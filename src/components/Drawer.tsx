@@ -1,21 +1,15 @@
 import React from "react";
-import styled from "styled-components";
+
 import { GeoType } from "../types";
 
 interface IProps {
   data: GeoType | null;
   isLoading: boolean;
 }
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  min-width: 375px;
-  background-color: #ffffff;
-`;
 
 const Drawer = ({ data, isLoading }: IProps) => {
   return (
-    <Container>
+    <div className="flex flex-col w-96 bg-white">
       {isLoading ? (
         <div>로딩중</div>
       ) : (
@@ -24,7 +18,9 @@ const Drawer = ({ data, isLoading }: IProps) => {
           <div>{data?.assetOverviewMulti.roadNameAddress}</div>
           <div>{data?.assetOverviewMulti.assetName}</div>
           <div>이미지</div>
-          <div>토지:{data?.assetOverviewMulti.landsData.assetLandArea}</div>
+          <div className="font-bold text-red-500">
+            토지:{data?.assetOverviewMulti.landsData.assetLandArea}
+          </div>
           <div>건물:{data?.assetOverviewMulti.totalGroundFloorArea}</div>
           <div>추정가:{data?.assetOverviewMulti.assetValue.estimatePrice}</div>
           <div>수익률:4.2%</div>
@@ -47,7 +43,7 @@ const Drawer = ({ data, isLoading }: IProps) => {
           ) : null}
         </div>
       )}
-    </Container>
+    </div>
   );
 };
 
