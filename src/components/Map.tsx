@@ -27,6 +27,7 @@ const Map = ({ data, setData, setIsLoading }: IProps) => {
     let marker: naver.maps.Marker | null = null;
 
     naver.maps.Event.addListener(map, "click", (e) => {
+      console.log(e);
       setIsLoading(true);
       if (!marker) {
         let markerOptions = {
@@ -50,34 +51,78 @@ const Map = ({ data, setData, setIsLoading }: IProps) => {
         pin?.removeChild(container);
       }
 
-      axios
-        .get(
-          "https://vos.land/api/asset/all-processed-data?asset_pnu=1168010600110020000"
-        )
-        .then((res) => {
-          setData(res.data);
-          setIsLoading(false);
-          let container = document.createElement("div");
-          container.className = "container";
-          container.style.width = "inherit";
-          container.style.height = "inherit";
-          container.style.display = "flex";
-          container.style.justifyContent = "center";
-          container.style.flexDirection = "column";
-          container.style.alignItems = "center";
-          container.style.zIndex = "2";
-          container.style.position = "fixed";
-          let address = document.createElement("div");
-          address.className = "address";
-          address.textContent = res.data.assetOverviewMulti.assetAddress;
-          let price = document.createElement("div");
-          price.className = "price";
-          price.textContent =
-            res.data.assetOverviewMulti.assetValue.estimatePrice;
-          container.append(address);
-          container.append(price);
-          pin?.append(container);
-        });
+      // axios
+      //   .get(
+      //     `https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc?coords=${e.latlng.x},${e.latlng.y}`,
+      //     {
+      //       headers: {
+      //         "X-NCP-APIGW-API-KEY-ID": "eee6xl79u6",
+      //         "X-NCP-APIGW-API-KEY": "qlzVcNtVdb3qFWBEr9s1aBXBUPIjMHu47gaTeJAf",
+      //       },
+      //     }
+      //   )
+      //   .then((res) => console.log(res))
+      //   .catch((e) => console.log(e));
+
+      naver.maps.Service.reverseGeocode(
+        {
+          coords: e.latlng,
+          orders: [
+            naver.maps.Service.OrderType.ADDR,
+            naver.maps.Service.OrderType.ROAD_ADDR,
+          ].join(","),
+        },
+        function (status, response) {
+          if (status !== naver.maps.Service.Status.OK) {
+            return alert("Something wrong!");
+          }
+
+          var result = response.v2; // 검색 결과의 컨테이너
+          const jibun = result.results[0]; // 검색 결과의 배열
+          const { code, land } = jibun;
+
+          const make4 = (s: string): string => {
+            let arr = s.split("");
+            while (arr.length !== 4) {
+              arr = ["0", ...arr];
+            }
+            return arr.join("");
+          };
+
+          let pnu =
+            code.id + land.type + make4(land.number1) + make4(land.number2);
+
+          axios
+            .get(
+              `https://vos.land/api/asset/all-processed-data?asset_pnu=${pnu}`
+            )
+            .then((res) => {
+              console.log("@@@@@@@@@@@", res.data);
+              setData(res.data);
+              setIsLoading(false);
+              let container = document.createElement("div");
+              container.className = "container";
+              container.style.width = "inherit";
+              container.style.height = "inherit";
+              container.style.display = "flex";
+              container.style.justifyContent = "center";
+              container.style.flexDirection = "column";
+              container.style.alignItems = "center";
+              container.style.zIndex = "2";
+              container.style.position = "fixed";
+              let address = document.createElement("div");
+              address.className = "address";
+              address.textContent = res.data.assetOverviewMulti.assetAddress;
+              let price = document.createElement("div");
+              price.className = "price";
+              price.textContent =
+                res.data.assetOverviewMulti.assetValue.estimatePrice;
+              container.append(address);
+              container.append(price);
+              pin?.append(container);
+            });
+        }
+      );
     });
   }, []);
 
