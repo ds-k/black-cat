@@ -81,6 +81,9 @@ const Map = ({ data, setData, setIsLoading, setIsHome }: IProps) => {
             }
             pin?.append(container);
           }, 500);
+        })
+        .catch((e) => {
+          alert("서비스 준비중인 지역입니다.");
         });
     }
   }, [path]);
@@ -105,11 +108,12 @@ const Map = ({ data, setData, setIsLoading, setIsHome }: IProps) => {
         },
         (status, response) => {
           if (status !== naver.maps.Service.Status.OK) {
-            return alert("Something wrong!");
+            alert("네이버 서버 오류입니다.");
           }
 
           var result = response.v2;
           const jibun = result.results[0];
+          if (!jibun) alert("이용할 수 없는 지역입니다.");
           const { code, land } = jibun;
 
           const make4 = (s: string): string => {
