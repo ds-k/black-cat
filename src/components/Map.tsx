@@ -9,9 +9,10 @@ interface IProps {
   data: GeoType | null;
   setData: Dispatch<SetStateAction<GeoType | null>>;
   setIsLoading: Dispatch<SetStateAction<boolean>>;
+  setIsHome: Dispatch<SetStateAction<boolean>>;
 }
 
-const Map = ({ data, setData, setIsLoading }: IProps) => {
+const Map = ({ data, setData, setIsLoading, setIsHome }: IProps) => {
   let navigate = useNavigate();
   const { pathname } = useLocation();
   const path = pathname.split("/")[2];
@@ -20,8 +21,8 @@ const Map = ({ data, setData, setIsLoading }: IProps) => {
   const markerRef = useRef<naver.maps.Marker>();
 
   useEffect(() => {
-    console.log("변화");
     if (path) {
+      setIsHome(false);
       setIsLoading(true);
       axios
         .get(`https://vos.land/api/asset/all-processed-data?asset_pnu=${path}`)
@@ -30,7 +31,6 @@ const Map = ({ data, setData, setIsLoading }: IProps) => {
           let map = mapRef.current;
           let position = res.data.centerPoint.streetViewTarget;
           let marker = markerRef.current;
-          console.log("marker", marker);
           if (!marker) {
             let markerOptions = {
               position,

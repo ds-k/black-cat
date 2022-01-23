@@ -6,16 +6,16 @@ import DoughnutChart from "../components/Chart";
 interface IProps {
   data: GeoType | null;
   isLoading: boolean;
+  isHome: boolean;
 }
 
-const Drawer = ({ data, isLoading }: IProps) => {
+const Drawer = ({ data, isLoading, isHome }: IProps) => {
   const [addressType, setAddressType] = useState(true);
 
   const handleAddress = (e: any) => {
     if (data && data.assetOverviewMulti.roadNameAddress) {
       setAddressType(!addressType);
     }
-    console.log(e.target.textContent);
   };
 
   useEffect(() => {
@@ -24,7 +24,6 @@ const Drawer = ({ data, isLoading }: IProps) => {
 
   useEffect(() => {
     let pinAddress = document.querySelector(".address");
-    if (data) console.log(data.assetOverviewMulti);
     if (addressType && pinAddress && data) {
       pinAddress.textContent = data.assetOverviewMulti.assetAddress
         .trim()
@@ -43,9 +42,9 @@ const Drawer = ({ data, isLoading }: IProps) => {
   }, [addressType]);
 
   return (
-    <div className="flex flex-col w-96 bg-white shadow-lg">
+    <div className="flex flex-col w-96 bg-white shadow-xl">
       {!isLoading && data ? (
-        <div className="w-96">
+        <div className="w-96  h-full">
           <nav className="flex h-14 py-1 pr-1 items-center">
             <img src="/logo.svg" alt="logo" />
             <div className="flex items-center justify-between w-11/12 h-full border border-#ccc outline-none px-2">
@@ -195,8 +194,21 @@ const Drawer = ({ data, isLoading }: IProps) => {
             </section>
           ) : null}
         </div>
+      ) : isHome ? (
+        <div className="flex flex-col items-center justify-center w-96 h-full ">
+          <img src="/logo.svg" alt="logo" className="animate-bounce" />
+          <span className="text-lg font-main text-black">
+            정보가 필요한 곳을 <br />
+          </span>
+          <span className="text-lg font-main text-black">클릭해주세요.</span>
+        </div>
       ) : (
-        <div className="w-96">로딩중</div>
+        <div className="flex flex-col items-center justify-center w-96 h-full ">
+          <img src="/logo.svg" alt="logo" className="animate-spin" />
+          <span className="text-lg font-main text-black ">
+            정보를 불러오는 중입니다.
+          </span>
+        </div>
       )}
     </div>
   );
