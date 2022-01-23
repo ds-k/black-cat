@@ -1,46 +1,62 @@
-# Getting Started with Create React App
+# BlackCat
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 웹 실행
 
-## Available Scripts
+```
+npm install
+```
 
-In the project directory, you can run:
+```
+npm start
+```
 
-### `npm start`
+- 필요한 패키지를 설치하시고, `npm start` 명령을 실행하시면, `http://localhost:3000`으로 실행됩니다.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## 기능 Overview
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- 맵에 마커를 찍어 해당 건물 또는 지역의 정보를 볼 수 있습니다.
+- 데이터 로딩시 사이드바와 마커에 애니메이션 효과가 적용되어 있습니다.
+- Naver map API를 이용하여 제작되었습니다.
 
-### `npm test`
+### 마커 표시 및 애니메이션
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- 최초 구현은 좌표 클릭시 `loading`이 실행되고, 로딩되는 동안 애니메이션이 진행되는 방식으로 구현했습니다.
+- 그러나, 도중 각각의 좌표에 따른 정보를 구현하고 싶어 동작 방식을 아래와 같이 바꿨습니다.
 
-### `npm run build`
+```
+// 최초 구현
+ 좌표 클릭 -> API call(loading : true) -> 응답 랜더링(loading : false)
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+// 변경 구현
+ 좌표 클릭 -> naver geocoder submodule을 활용해 코드 조회 ->
+ 해당 코드로 라우팅(property/{코드}) (loading : true)->
+ path를 바탕으로  API Call ->
+ 응답 바탕으로 마커 표시 및 애니메이션 재생(5000ms 지연) ->
+ 응답 랜더링(loading : false)
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 사이드바 구현
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- API를 통해 얻은 데이터의 대부분을 적으려고 노력했습니다.
+- 차트는 chart.js 라이브러를 사용해서 모양을 그렸고, 데이터는 임의의 값입니다.
+- 도로명 주소 <-> 지번 주소 변환이 구현되어 있습니다. 이 변환은 육각형 마커에도 적용됩니다.
 
-### `npm run eject`
+### 라우팅 구현
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- 맵을 클릭하면 해당 동 코드로 라우팅됩니다.
+- `/property/{코드}`로 접속할 시 마커 표시 및 애니메이션이 클릭할 때와 동일하게 구현됩니다.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 추가 기능
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+- 사이드바에 로딩 스피너 처리가 되어있습니다.
+- `alert`을 통해 서버 오류가 날 경우에 알럿이 울리도록 했습니다.
+- 지정한 정보 뿐 아니라, 다른 주소도 조회할 수 있습니다.
+- 좌표에 따라 맵이 자연스럽게 이동합니다.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### 추가 라이브러리
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- tailwindcss
+- chart.js
+- axios
