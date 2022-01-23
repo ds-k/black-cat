@@ -68,10 +68,7 @@ const Map = ({ data, setData, setIsLoading }: IProps) => {
 
             let address = document.createElement("div");
             address.className = "address";
-            address.textContent =
-              res.data.assetOverviewMulti.assetName.length < 8
-                ? res.data.assetOverviewMulti.assetName
-                : ` ${res.data.assetOverviewMulti.assetAddressObject.emd} ${res.data.assetOverviewMulti.assetAddressObject.ji}`;
+            address.textContent = ` ${res.data.assetOverviewMulti.assetAddressObject.emd} ${res.data.assetOverviewMulti.assetAddressObject.ji}`;
             let price = document.createElement("div");
             price.className = "price";
             price.textContent = priceToKorean(
