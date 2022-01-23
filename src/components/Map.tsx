@@ -114,7 +114,8 @@ const Map = ({ data, setData, setIsLoading, setIsHome }: IProps) => {
           var result = response.v2;
           const jibun = result.results[0];
           if (!jibun) alert("이용할 수 없는 지역입니다.");
-          const { code, land } = jibun;
+          const { code, land } = jibun as any;
+          // @types/navermaps에 정의되지 않은 타입이 있어 any로 타입캐스팅했습니다.
 
           const make4 = (s: string): string => {
             let arr = s.split("");
