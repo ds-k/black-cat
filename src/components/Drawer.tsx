@@ -10,7 +10,7 @@ interface IProps {
 }
 
 const Drawer = ({ data, isLoading, isHome }: IProps) => {
-  const [addressType, setAddressType] = useState(true);
+  const [addressType, setAddressType] = useState(true); // * 지번주소 or 도로명주소
 
   const handleAddress = (e: any) => {
     if (data && data.assetOverviewMulti.roadNameAddress) {
@@ -20,24 +20,22 @@ const Drawer = ({ data, isLoading, isHome }: IProps) => {
 
   useEffect(() => {
     setAddressType(true);
-  }, [data]);
+  }, [data]); // * 새로 클릭했을때 지번주소로 나오도록
 
   useEffect(() => {
     let pinAddress = document.querySelector(".address");
-    if (addressType && pinAddress && data) {
-      pinAddress.textContent = data.assetOverviewMulti.assetAddress
-        .trim()
-        .replaceAll("  ", " ")
-        .split(" ")
-        .slice(2)
-        .join(" ");
-    } else if (!addressType && pinAddress && data) {
-      pinAddress.textContent = data.assetOverviewMulti.roadNameAddress
-        .trim()
-        .replaceAll("  ", " ")
-        .split(" ")
-        .slice(2)
-        .join(" ");
+    if (!pinAddress || !data) return; // * data나 address가 없을 경우 실행 안되도록
+    const { assetAddress, roadNameAddress } = data.assetOverviewMulti;
+
+    pinAddress.textContent = addressType
+      ? formatAddress(assetAddress)
+      : formatAddress(roadNameAddress);
+    function formatAddress(address: string) {
+      return address
+        .split(" ") // * 배열로 분리
+        .filter((item) => item) // * 공백 삭제
+        .slice(-2) // * 뒤에서 두개 자르기
+        .join(" "); // * 공백으로 맞추기
     }
   }, [addressType]);
 
@@ -215,9 +213,3 @@ const Drawer = ({ data, isLoading, isHome }: IProps) => {
 };
 
 export default Drawer;
-
-/*
-
-
-
-*/
